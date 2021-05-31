@@ -1,4 +1,3 @@
-// @ts-check
 import babel from '@babel/core'
 import viteReactJsx, { babelImportToRequire } from 'vite-react-jsx'
 import {
@@ -7,12 +6,32 @@ import {
   preambleCode,
   runtimeCode,
   runtimePublicPath
-} from './fast-refresh.js'
+} from './fast-refresh'
+import { Plugin } from 'vite'
+import { TransformOptions, ParserOptions } from '@babel/core'
 
-/**
- * @param {import('./').Options} opts
- */
-export default function viteReact(opts = {}) {
+export interface Options {
+  /**
+   * Enable `react-refresh` integration. Vite disables this in prod env or build mode.
+   * @default true
+   */
+  fastRefresh?: boolean
+  /**
+   * Set this to `"automatic"` to use [vite-react-jsx](https://github.com/alloc/vite-react-jsx).
+   * @default "classic"
+   */
+  jsxRuntime?: 'classic' | 'automatic'
+  /**
+   * Babel configuration applied in both dev and prod.
+   */
+  babel?: TransformOptions
+  /**
+   * @deprecated Use `babel.parserOpts.plugins` instead
+   */
+  parserPlugins?: ParserOptions['plugins']
+}
+
+export default function viteReact(opts: Options = {}): Plugin {
   let base = '/'
   let projectRoot = process.cwd()
   let isProduction = true
@@ -22,16 +41,14 @@ export default function viteReact(opts = {}) {
   const userParserPlugins =
     opts.parserPlugins || opts.babel?.parserOpts?.plugins || []
 
-  /** @type {import('vite').Plugin} */
-  const viteBabel = {
+  const viteBabel: Plugin = {
     name: 'vite:babel',
     enforce: 'pre',
     async transform(code, id, ssr) {
       if (/\.[tj]sx?$/.test(id)) {
         const plugins = [...userPlugins]
 
-        /** @type {typeof userParserPlugins} */
-        const parserPlugins = [
+        const parserPlugins: typeof userParserPlugins = [
           ...userParserPlugins,
           'jsx',
           'importMeta',
@@ -105,8 +122,7 @@ export default function viteReact(opts = {}) {
 
         const isReasonReact = id.endsWith('.bs.js')
 
-        /** @type {import('@babel/core').TransformOptions} */
-        const babelOpts = {
+        const babelOpts: TransformOptions = {
           babelrc: false,
           configFile: false,
           ...opts.babel,
@@ -146,8 +162,7 @@ export default function viteReact(opts = {}) {
     }
   }
 
-  /** @type {import('vite').Plugin} */
-  const viteReactRefresh = {
+  const viteReactRefresh: Plugin = {
     name: 'vite:react-refresh',
     enforce: 'pre',
     config: () => ({
@@ -206,6 +221,6 @@ export default function viteReact(opts = {}) {
 
 viteReact.preambleCode = preambleCode
 
-function interopDefault(promise) {
+function interopDefault(promise: Promise<any>): Promise<any> {
   return promise.then((module) => module.default || module)
 }
