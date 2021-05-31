@@ -7,9 +7,9 @@ import {
   preambleCode,
   runtimeCode,
   runtimePublicPath
-} from './fast-refresh.js'
-import { babelImportToRequire } from './jsx-runtime/babel-import-to-require.js'
-import { restoreJSX } from './jsx-runtime/restore-jsx.js'
+} from './fast-refresh'
+import { babelImportToRequire } from './jsx-runtime/babel-import-to-require'
+import { restoreJSX } from './jsx-runtime/restore-jsx'
 
 export interface Options {
   /**
