@@ -1,14 +1,15 @@
-import babel from '@babel/core'
-import viteReactJsx, { babelImportToRequire } from 'vite-react-jsx'
+import babel, { ParserOptions, TransformOptions } from '@babel/core'
+import resolve from 'resolve'
+import { Plugin } from 'vite'
 import {
   addRefreshWrapper,
   isRefreshBoundary,
   preambleCode,
   runtimeCode,
   runtimePublicPath
-} from './fast-refresh'
-import { Plugin } from 'vite'
-import { TransformOptions, ParserOptions } from '@babel/core'
+} from './fast-refresh.js'
+import { babelImportToRequire } from './jsx-runtime/babel-import-to-require.js'
+import { restoreJSX } from './jsx-runtime/restore-jsx.js'
 
 export interface Options {
   /**
@@ -98,7 +99,7 @@ export default function viteReact(opts: Options = {}): Plugin {
         if (id.endsWith('x')) {
           if (opts.jsxRuntime === 'automatic') {
             const [restoredAst, isCommonJS] = isNodeModules
-              ? await viteReactJsx.restoreJSX(babel, code)
+              ? await restoreJSX(babel, code)
               : [null, false]
 
             ast = restoredAst
@@ -207,15 +208,34 @@ export default function viteReact(opts: Options = {}): Plugin {
     }
   }
 
+  const runtimeId = 'react/jsx-runtime'
+  const viteReactJsx = {
+    name: 'vite:react-jsx',
+    enforce: 'pre',
+    resolveId(id: string) {
+      return id === runtimeId ? id : null
+    },
+    load(id: string) {
+      if (id === runtimeId) {
+        const runtimePath = resolve.sync(runtimeId, {
+          basedir: projectRoot
+        })
+        const exports = ['jsx', 'jsxs', 'Fragment']
+        return [
+          `import * as jsxRuntime from '${runtimePath}'`,
+          // We can't use `export * from` or else any callsite that uses
+          // this module will be compiled to `jsxRuntime.exports.jsx`
+          // instead of the more concise `jsx` alias.
+          ...exports.map((name) => `export const ${name} = jsxRuntime.${name}`)
+        ].join('\n')
+      }
+    }
+  }
+
   return [
     viteBabel,
     viteReactRefresh,
-    opts.jsxRuntime === 'automatic' &&
-      viteReactJsx.getRuntimeLoader({
-        get root() {
-          return projectRoot
-        }
-      })
+    opts.jsxRuntime === 'automatic' && viteReactJsx
   ]
 }
 
