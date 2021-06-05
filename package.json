@@ -13,6 +13,7 @@
     "dist"
   ],
   "scripts": {
+    "start": "cd playground && node ../bin/vite.js",
     "dev": "run-p dev-client dev-server",
     "dev-client": "tsc -w --p src/client",
     "dev-server": "tsc -w --p src/server",
