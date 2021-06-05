@@ -40,7 +40,6 @@ export async function createServer({
         if (e.code === 'ENOENT') {
           // fallthrough to serve-handler
         } else {
-          console.error(e)
         }
       }
     }

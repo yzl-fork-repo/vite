@@ -1,4 +1,5 @@
-import { sayHello, sum } from './foo'
+import { sayHello, sum } from './foo.js'
 
 sayHello()
-console.log(sum(1, 2))
+
+console.log(sum(211341044, 23))

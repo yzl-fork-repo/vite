@@ -11,6 +11,7 @@ export function send(
 }
 
 export function sendJS(res: ServerResponse, source: string | Buffer) {
+  source = 'import \'./__hmrClient\'\n' + source
   send(res, source, 'application/javascript')
 }
 
