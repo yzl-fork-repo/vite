@@ -4,7 +4,6 @@ import http, { Server } from 'http'
 import url from 'url'
 import WebSocket from 'ws'
 import serve from 'serve-handler'
-import { vueMiddleware } from './vueCompiler'
 import { resolveModule } from './moduleResolver'
 import { createFileWatcher } from './watcher'
 import { sendJS } from './utils'
@@ -16,9 +15,9 @@ export interface ServerConfig {
 }
 
 export async function createServer({
-  port = 3000,
-  cwd = process.cwd()
-}: ServerConfig = {}): Promise<Server> {
+                                     port = 3000,
+                                     cwd = process.cwd()
+                                   }: ServerConfig = {}): Promise<Server> {
   const hmrClientCode = await fs.readFile(
     path.resolve(__dirname, '../client/client.js')
   )
@@ -29,18 +28,13 @@ export async function createServer({
       return sendJS(res, hmrClientCode)
     } else if (pathname.startsWith('/__modules/')) {
       return resolveModule(pathname.replace('/__modules/', ''), cwd, res)
-    } else if (pathname.endsWith('.vue')) {
-      return vueMiddleware(cwd, req, res)
     } else if (pathname.endsWith('.js')) {
       const filename = path.join(cwd, pathname.slice(1))
       try {
         const content = await fs.readFile(filename, 'utf-8')
         return sendJS(res, rewrite(content))
       } catch (e) {
-        if (e.code === 'ENOENT') {
-          // fallthrough to serve-handler
-        } else {
-        }
+        console.log(e)
       }
     }
 
