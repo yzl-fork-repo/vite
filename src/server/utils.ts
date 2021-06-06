@@ -1,5 +1,6 @@
 import fs from 'fs'
 import { ServerResponse } from 'http'
+import * as execa from 'execa'
 
 export function send(
   res: ServerResponse,
@@ -11,7 +12,6 @@ export function send(
 }
 
 export function sendJS(res: ServerResponse, source: string | Buffer) {
-  source = 'import \'./__hmrClient\'\n' + source
   send(res, source, 'application/javascript')
 }
 
@@ -24,4 +24,25 @@ export function sendJSStream(res: ServerResponse, filename: string) {
   stream.on('error', (err) => {
     res.end(err)
   })
+}
+
+
+export function runCommand(command: string, args?: string[], path?: string) {
+  let p = path
+  if (!p) {
+    p = process.cwd()
+  }
+  if (!args) {
+    // \s 匹配任何空白字符，包括空格、制表符、换页符
+    [command, ...args] = command.split(/\s+/)
+  }
+
+  return execa.sync(
+    command,
+    args,
+    {
+      cwd: p,
+      stdio: 'inherit'
+    }
+  )
 }

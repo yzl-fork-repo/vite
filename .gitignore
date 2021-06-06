@@ -5,3 +5,4 @@ TODOs.md
 *.log
 test/temp
 .idea
+.cache
